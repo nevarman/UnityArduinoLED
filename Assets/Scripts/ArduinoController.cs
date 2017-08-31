@@ -1,25 +1,26 @@
 ﻿using UnityEngine;
 using System.IO.Ports;
-using System.Text;
-using System.Collections.Generic;
 using System.Collections;
 using System;
+using UnityEngine.Networking;
 
 namespace ArduinoUnity
 {
-    public class ArduinoController : MonoBehaviour
+    public class ArduinoController : NetworkBehaviour
     {
         [SerializeField]
         protected string portName = "COM3"; // changes on MAC check from Arduino Ide
 
         [SerializeField]
-        protected LedAnimationDataObject ledAnimationDataObject;
-
         protected LedAnimationData currentAnimationData;
+
+        [SerializeField]
+        private bool listen;
 
         SerialPort stream;
         bool _isListening;
         string dataString = null;
+
         void Start()
         {
             stream = new SerialPort(portName, 9600);
@@ -36,30 +37,18 @@ namespace ArduinoUnity
                 stream.Close();
         }
 
-        void OnGUI()
+        public void SetLedAnimation(LedAnimationData data)
         {
-            foreach(var data in ledAnimationDataObject.serialDatas)
-            {
-                if (GUILayout.Button(data.animationType.ToString()))
-                {
-                    SetLedAnimation(data.animationType);
-                }
-            }
-        }
-
-        public void SetLedAnimation(LedAnimationType anim)
-        {
-            currentAnimationData = ledAnimationDataObject.GetDataAsDictionary()[anim];
+            currentAnimationData = data;
             if (!currentAnimationData.sendContinuously)
                 SendCurrentSerialData();
-            
         }
 
         void Update()
         {
             if (!stream.IsOpen) return;
 
-            if (!_isListening)
+            if (listen && !_isListening)
                 StartCoroutine(AsynchronousReadFromArduino((string s) => Debug.Log(s),null,5f ));
 
             if (currentAnimationData == null || !currentAnimationData.sendContinuously) return;
@@ -68,26 +57,17 @@ namespace ArduinoUnity
 
         private void SendCurrentSerialData()
         {
-            
-            StringBuilder str = new StringBuilder();
-            for (int i =0; i<currentAnimationData.serialData.Length; i++)
-            {
-                str.Append(currentAnimationData.serialData[i]);
-                if(i < currentAnimationData.serialData.Length-1)
-                str.Append(",");
-            }
-            WriteToArduino(str.ToString());
-
+            WriteToArduino(currentAnimationData.GetArduinoStream());
         }
 
         public void WriteToArduino(string message)
         {
+            if (!stream.IsOpen) return;
             stream.WriteLine(message);
             stream.BaseStream.Flush();
         }
-
         
-        public IEnumerator AsynchronousReadFromArduino(Action<string> callback, Action fail = null, float timeout = float.PositiveInfinity)
+        private IEnumerator AsynchronousReadFromArduino(Action<string> callback, Action fail = null, float timeout = float.PositiveInfinity)
         {
             _isListening = true;
             DateTime initialTime = DateTime.Now;

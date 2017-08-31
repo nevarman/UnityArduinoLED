@@ -9,21 +9,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a5523522e12834f43a202526e74074b6, type: 3}
-  m_Name: SerialData
+  m_Name: SerialData_SetColor
   m_EditorClassIdentifier: 
-  serialDatas:
-  - animationType: 0
-    serialData:
-    - A
-    - 100
-    - 255
-    - 0
-    sendContinuously: 0
-  - animationType: 1
-    serialData:
-    - B
-    sendContinuously: 1
-  - animationType: 2
-    serialData:
-    - C
-    sendContinuously: 1
+  serialStartData: A
+  serialData: 0,255,171
+  sendContinuously: 0
