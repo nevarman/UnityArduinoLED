@@ -6,16 +6,13 @@ using UnityEngine.Networking;
 
 namespace ArduinoUnity
 {
-    public class ArduinoController : NetworkBehaviour
+    public class ArduinoController : MonoBehaviour
     {
         [SerializeField]
         protected string portName = "COM3"; // changes on MAC check from Arduino Ide
 
         [SerializeField]
-        protected LedAnimationData currentAnimationData;
-
-        [SerializeField]
-        private bool listen;
+        private bool _listenPrint;
 
         SerialPort stream;
         bool _isListening;
@@ -28,45 +25,36 @@ namespace ArduinoUnity
                 stream.Open();
             stream.ReadTimeout = 1;
             stream.WriteTimeout = 50;
-            print(stream.IsOpen);
+
+            print("Port opened : "+stream.IsOpen);
         }
 
         void OnDisable()
         {
-            if (stream.IsOpen)
+            if (stream != null && stream.IsOpen)
                 stream.Close();
-        }
-
-        public void SetLedAnimation(LedAnimationData data)
-        {
-            currentAnimationData = data;
-            if (!currentAnimationData.sendContinuously)
-                SendCurrentSerialData();
-        }
-
-        void Update()
-        {
-            if (!stream.IsOpen) return;
-
-            if (listen && !_isListening)
-                StartCoroutine(AsynchronousReadFromArduino((string s) => Debug.Log(s),null,5f ));
-
-            if (currentAnimationData == null || !currentAnimationData.sendContinuously) return;
-                SendCurrentSerialData();
-        }
-
-        private void SendCurrentSerialData()
-        {
-            WriteToArduino(currentAnimationData.GetArduinoStream());
         }
 
         public void WriteToArduino(string message)
         {
-            if (!stream.IsOpen) return;
+            if (stream == null || !stream.IsOpen ) return;
             stream.WriteLine(message);
             stream.BaseStream.Flush();
+            
         }
-        
+
+        private void Update()
+        {
+            if (stream == null || !stream.IsOpen) return;
+            if (_listenPrint && !_isListening)
+                StartCoroutine(AsynchronousReadFromArduino(OnStreamReceived, null, 5f));
+        }
+
+        private void OnStreamReceived(string obj)
+        {
+            Debug.Log("Arduino : "+obj);
+        }
+
         private IEnumerator AsynchronousReadFromArduino(Action<string> callback, Action fail = null, float timeout = float.PositiveInfinity)
         {
             _isListening = true;
