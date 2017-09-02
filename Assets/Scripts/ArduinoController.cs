@@ -2,7 +2,8 @@
 using System.IO.Ports;
 using System.Collections;
 using System;
-using UnityEngine.Networking;
+using UnityEngine.UI;
+using System.IO;
 
 namespace ArduinoUnity
 {
@@ -12,21 +13,31 @@ namespace ArduinoUnity
         protected string portName = "COM3"; // changes on MAC check from Arduino Ide
 
         [SerializeField]
+        private bool _openPortOnStart;
+
+        [SerializeField]
         private bool _listenPrint;
+
+        [SerializeField]
+        private GameObject _canvasPort;
+        [SerializeField]
+        private InputField _inputPort;
 
         SerialPort stream;
         bool _isListening;
         string dataString = null;
 
+        public string PortName
+        {
+            get { return portName; }
+            set { portName = value; }
+        }
+
         void Start()
         {
-            stream = new SerialPort(portName, 9600);
-            if (!stream.IsOpen)
-                stream.Open();
-            stream.ReadTimeout = 1;
-            stream.WriteTimeout = 50;
-
-            print("Port opened : "+stream.IsOpen);
+            _inputPort.text = portName;
+            if (_openPortOnStart)
+                OpenPort();
         }
 
         void OnDisable()
@@ -35,12 +46,32 @@ namespace ArduinoUnity
                 stream.Close();
         }
 
+        public void OpenPort()
+        {
+            stream = new SerialPort(portName, 9600);
+            try
+            {
+                if (!stream.IsOpen)
+                    stream.Open();
+                stream.ReadTimeout = 1;
+                stream.WriteTimeout = 50;
+
+                print("Port opened : " + stream.IsOpen);
+                _canvasPort.SetActive(false);
+            }
+            catch(IOException ex)
+            {
+                Debug.LogError("Error occured while opening port: "+ex.Message);
+                _inputPort.image.color = Color.red;
+                _canvasPort.SetActive(true);
+            }
+        }
+
         public void WriteToArduino(string message)
         {
             if (stream == null || !stream.IsOpen ) return;
             stream.WriteLine(message);
             stream.BaseStream.Flush();
-            
         }
 
         private void Update()
