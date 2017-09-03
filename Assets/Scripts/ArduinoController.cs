@@ -4,10 +4,11 @@ using System.Collections;
 using System;
 using UnityEngine.UI;
 using System.IO;
+using UnityEngine.Networking;
 
 namespace ArduinoUnity
 {
-    public class ArduinoController : MonoBehaviour
+    public class ArduinoController : NetworkBehaviour
     {
         [SerializeField]
         protected string portName = "COM3"; // changes on MAC check from Arduino Ide
@@ -35,6 +36,9 @@ namespace ArduinoUnity
 
         void Start()
         {
+            _canvasPort.SetActive(isServer);
+            if (!isServer)
+                enabled = false;
             _inputPort.text = portName;
             if (_openPortOnStart)
                 OpenPort();

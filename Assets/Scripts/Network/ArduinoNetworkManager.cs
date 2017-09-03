@@ -30,7 +30,7 @@ namespace Assets.Scripts.Network
 
         private void Update()
         {
-            if (Input.GetKeyDown(_hudKeyCode) || Input.touchCount == 4)
+            if (Input.GetKeyDown(_hudKeyCode) || Input.touchCount == 2)
             {
                 var hud = GetComponent<NetworkManagerHUD>();
                 hud.showGUI = !hud.showGUI;
