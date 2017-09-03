@@ -36,17 +36,5 @@ namespace Assets.Scripts.Network
             if (!arduinoController) return;
             arduinoController.WriteToArduino(data);
         }
-
-        //[SerializeField]
-        //protected string writeStream = "A,255,255,0";
-        //private void OnGUI()
-        //{
-        //    if (!isLocalPlayer) return;
-        //    writeStream = GUILayout.TextField(writeStream);
-        //    if (GUILayout.Button("Send"))
-        //    {
-        //        CmdWrite(writeStream);
-        //    }
-        //}
     }
 }
