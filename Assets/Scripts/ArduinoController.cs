@@ -10,6 +10,8 @@ namespace ArduinoUnity
 {
     public class ArduinoController : NetworkBehaviour
     {
+        private const string WRITE_LINE_CALLBACK = "DONE";
+
         [SerializeField]
         protected string portName = "COM3"; // changes on MAC check from Arduino Ide
 
@@ -17,7 +19,7 @@ namespace ArduinoUnity
         private bool _openPortOnStart;
 
         [SerializeField]
-        private bool _listenPrint;
+        private bool _logReadLine;
 
         [SerializeField]
         private GameObject _canvasPort;
@@ -25,6 +27,9 @@ namespace ArduinoUnity
         private InputField _inputPort;
 
         SerialPort stream;
+        bool _canSendData = true;
+        bool _sendContinuously;
+        string _continuousMessage;
         bool _isListening;
         string dataString = null;
 
@@ -63,33 +68,94 @@ namespace ArduinoUnity
                 print("Port opened : " + stream.IsOpen);
                 _canvasPort.SetActive(false);
             }
-            catch(IOException ex)
+            catch (IOException ex)
             {
-                Debug.LogError("Error occured while opening port: "+ex.Message);
+                Debug.LogError("Error occured while opening port: " + ex.Message);
                 _inputPort.image.color = Color.red;
                 _canvasPort.SetActive(true);
             }
         }
 
+        /// <summary>
+        /// Writes line to arduino
+        /// </summary>
+        /// <param name="message">The message.</param>
         public void WriteToArduino(string message)
         {
-            if (stream == null || !stream.IsOpen ) return;
+            _continuousMessage = null;
+            _sendContinuously = false;
+            WriteLine(message);
+        }
+
+        /// <summary>
+        /// Writes to arduino continuously.
+        /// Call it one time!
+        /// </summary>
+        /// <param name="message">The message.</param>
+        public void WriteToArduinoContinuously(string message)
+        {
+            _continuousMessage = message;
+            _sendContinuously = true;
+        }
+
+        /// <summary>
+        /// Sets the continuous message.
+        /// </summary>
+        /// <param name="value">The value.</param>
+        public void SetContinuousMessage(string value)
+        {
+            _continuousMessage = value;
+        }
+
+        /// <summary>
+        /// Writes the line to Arduino
+        /// </summary>
+        /// <param name="message">The message.</param>
+        private void WriteLine(string message)
+        {
+            if (stream == null || !stream.IsOpen) return;
             stream.WriteLine(message);
             stream.BaseStream.Flush();
+            _canSendData = false;
         }
 
         private void Update()
         {
             if (stream == null || !stream.IsOpen) return;
-            if (_listenPrint && !_isListening)
+            DispatchContinuous();
+            if (!_isListening)
                 StartCoroutine(AsynchronousReadFromArduino(OnStreamReceived, null, 5f));
         }
 
-        private void OnStreamReceived(string obj)
+        /// <summary>
+        /// Dispatches the continuous message
+        /// </summary>
+        private void DispatchContinuous()
         {
-            Debug.Log("Arduino : "+obj);
+            if (!_sendContinuously || !_canSendData || string.IsNullOrEmpty(_continuousMessage))
+                return;
+            WriteLine(_continuousMessage);
         }
 
+        /// <summary>
+        /// Called when [stream received].
+        /// </summary>
+        /// <param name="obj">The object.</param>
+        private void OnStreamReceived(string obj)
+        {
+            if (_logReadLine)
+                Debug.Log("Arduino : " + obj);
+            if (obj.Equals(WRITE_LINE_CALLBACK))
+                _canSendData = true;
+        }
+
+        /// <summary>
+        /// Asynchronouses the read lines from arduino.
+        /// </summary>
+        /// <param name="callback">The callback.</param>
+        /// <param name="fail">The fail.</param>
+        /// <param name="timeout">The timeout.</param>
+        /// <returns></returns>
         private IEnumerator AsynchronousReadFromArduino(Action<string> callback, Action fail = null, float timeout = float.PositiveInfinity)
         {
             _isListening = true;
@@ -126,5 +192,5 @@ namespace ArduinoUnity
             _isListening = false;
         }
 
-    } 
+    }
 }

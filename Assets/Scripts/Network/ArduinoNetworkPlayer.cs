@@ -25,16 +25,37 @@ namespace Assets.Scripts.Network
                 Write(data);
             RpcWrite(data);
         }
+
+        [Command]
+        public void CmdWriteContinuously(string data)
+        {
+            if (isClient)
+                WriteContinuously(data);
+            RpcWriteContinuously(data);
+        }
+
         [ClientRpc]
         private void RpcWrite(string data)
         {
             Write(data);
         }
 
+        [ClientRpc]
+        private void RpcWriteContinuously(string data)
+        {
+            WriteContinuously(data);
+        }
+
         private void Write(string data)
         {
             if (!arduinoController) return;
             arduinoController.WriteToArduino(data);
+        }
+
+        private void WriteContinuously(string data)
+        {
+            if (!arduinoController) return;
+            arduinoController.WriteToArduinoContinuously(data);
         }
     }
 }

@@ -42,8 +42,6 @@ void serialEvent() {
 void loop() {
   handleReceivedData();
   if (stringComplete) {
-    Serial.println(inputString);
-
     // Length (with one extra character for the null terminator)
     int str_len = inputString.length() + 1; 
 
@@ -56,6 +54,7 @@ void loop() {
     // clear the string:
     inputString = "";
     stringComplete = false;
+    Serial.println("DONE");
   }
   //strip.show(); //output to the neopixel
   //delay(20); //for safety
@@ -76,16 +75,12 @@ void parseCharData(char data[]) {
   
   strtokIndx = strtok(NULL, ","); 
   int b = atoi(strtokIndx);    
-
-  Serial.println(messageFromPC);
-  Serial.println( r);
-  Serial.println( g);
-  Serial.println( b);
+  
   receivedData = messageFromPC[0];
-  if(messageFromPC[0] == 'A'){
+  if(receivedData == 'A'){
     setAll(r,g,b);
   }
-  else if(messageFromPC[0] == 'B'){
+  else if(receivedData == 'B'){
     setAllRandom();
   }
   else if(receivedData == 'D'){
