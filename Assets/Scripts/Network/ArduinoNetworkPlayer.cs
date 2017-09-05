@@ -34,6 +34,14 @@ namespace Assets.Scripts.Network
             RpcWriteContinuously(data);
         }
 
+        [Command]
+        public void CmdSetContinuousData(string data)
+        {
+            if (isClient)
+                SetContinuousMessage(data);
+            RpcSetContinuousMessage(data);
+        }
+
         [ClientRpc]
         private void RpcWrite(string data)
         {
@@ -46,6 +54,12 @@ namespace Assets.Scripts.Network
             WriteContinuously(data);
         }
 
+        [ClientRpc]
+        private void RpcSetContinuousMessage(string data)
+        {
+            SetContinuousMessage(data);
+        }
+
         private void Write(string data)
         {
             if (!arduinoController) return;
@@ -56,6 +70,12 @@ namespace Assets.Scripts.Network
         {
             if (!arduinoController) return;
             arduinoController.WriteToArduinoContinuously(data);
+        }
+
+        private void SetContinuousMessage(string data)
+        {
+            if (!arduinoController) return;
+            arduinoController.SetContinuousMessage(data);
         }
     }
 }
